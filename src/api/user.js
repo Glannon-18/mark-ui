@@ -22,3 +22,10 @@ export function logout() {
     method: 'get'
   })
 }
+
+export function getUserMenu() {
+  return request({
+    url: '/user/menu',
+    method: 'get'
+  })
+}
