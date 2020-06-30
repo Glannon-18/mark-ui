@@ -1,6 +1,7 @@
-import { constantRoutes } from '@/router'
-import { getUserMenu } from '@/api/user'
+import {constantRoutes} from '@/router'
+import {getUserMenu} from '@/api/user'
 import router from '@/router'
+import Layout from '@/layout'
 
 const permission = {
   state: {
@@ -14,10 +15,11 @@ const permission = {
     }
   },
   actions: {
-    getUserMenu() {
+    getSidebar({commit}) {
       new Promise((resolve, reject) => {
         getUserMenu().then(data => {
-          const routes = data2Routes(data)
+          const routes = data2Routes(data.object)
+          commit('SET_ROUTERS', routes)
           router.addRoutes(routes)
           resolve(data)
         }).catch(error => {
@@ -29,7 +31,23 @@ const permission = {
 }
 
 function data2Routes(data) {
-
+  const asyncRoutes = []
+  data.forEach(d => {
+    const route = {
+      path: d.path,
+      component: d.parentId === 1 ? Layout : () => import('@/views/' + d.component + '/index'),
+      name: d.name,
+      meta: {
+        title: d.title,
+        icon: d.iconCls
+      }
+    }
+    if (d.children & d.children instanceof Array) {
+      route.children = data2Routes(d.children)
+    }
+    asyncRoutes.push(route)
+  })
+  return asyncRoutes
 }
 
 export default {
