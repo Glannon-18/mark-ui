@@ -17,10 +17,12 @@ const permission = {
   actions: {
     getSidebar({commit}) {
       new Promise((resolve, reject) => {
+        let asyncRoutes = []
         getUserMenu().then(data => {
-          const routes = data2Routes(data.object)
-          commit('SET_ROUTERS', routes)
-          router.addRoutes(routes)
+          data2Routes(asyncRoutes, data.object)
+          console.log(asyncRoutes)
+          router.addRoutes(asyncRoutes)
+          commit('SET_ROUTERS',asyncRoutes)
           resolve(data)
         }).catch(error => {
           reject(error)
@@ -30,24 +32,24 @@ const permission = {
   }
 }
 
-function data2Routes(data) {
-  const asyncRoutes = []
+function data2Routes(routes, data) {
   data.forEach(d => {
     const route = {
       path: d.path,
       component: d.parentId === 1 ? Layout : () => import('@/views/' + d.component + '/index'),
       name: d.name,
+      children: [],
       meta: {
         title: d.title,
         icon: d.iconCls
       }
     }
-    if (d.children & d.children instanceof Array) {
-      route.children = data2Routes(d.children)
+    if (d.children) {
+      console.log(111)
+      data2Routes(route.children, d.children)
     }
-    asyncRoutes.push(route)
+    routes.push(route)
   })
-  return asyncRoutes
 }
 
 export default {
