@@ -2,28 +2,29 @@ import {constantRoutes} from '@/router'
 import {getUserMenu} from '@/api/user'
 import router from '@/router'
 import Layout from '@/layout'
+import store from "@/store";
 
 const permission = {
   state: {
-    routers: constantRoutes,
-    addRouters: []
+    routes: constantRoutes,
+    addRoutes: []
   },
   mutations: {
     SET_ROUTERS: (state, routers) => {
-      state.addRouters = routers
-      state.routers = constantRoutes.concat(routers)
+      state.addRoutes = routers
+      state.routes = constantRoutes.concat(routers)
     }
   },
+  //356890
   actions: {
     getSidebar({commit}) {
       new Promise((resolve, reject) => {
         let asyncRoutes = []
         getUserMenu().then(data => {
           data2Routes(asyncRoutes, data.object)
-          console.log(asyncRoutes)
+          commit('SET_ROUTERS', asyncRoutes)
           router.addRoutes(asyncRoutes)
-          commit('SET_ROUTERS',asyncRoutes)
-          resolve(data)
+          router.options.routes = store.getters.routes
         }).catch(error => {
           reject(error)
         })
@@ -36,16 +37,15 @@ function data2Routes(routes, data) {
   data.forEach(d => {
     const route = {
       path: d.path,
-      component: d.parentId === 1 ? Layout : () => import('@/views/' + d.component + '/index'),
+      component: d.parentId === 1 ? Layout : resolve => require([`@/views/${d.component}/index`], resolve),
       name: d.name,
-      children: [],
       meta: {
         title: d.title,
         icon: d.iconCls
-      }
+      },
+      children: []
     }
     if (d.children) {
-      console.log(111)
       data2Routes(route.children, d.children)
     }
     routes.push(route)
