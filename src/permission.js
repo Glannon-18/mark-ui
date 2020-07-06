@@ -33,11 +33,9 @@ router.beforeEach(async (to, from, next) => {
         try {
           // get user info
           await store.dispatch('user/getInfo')
-          console.log(store.getters.addRoutes)
-          if (store.getters.addRoutes.length==0) {
-            console.log(1111)
-            await store.dispatch('permission/getSidebar')
-          }
+
+          await store.dispatch('permission/getSidebar')
+
           next()
         } catch (error) {
           // remove token and go to login page to re-login

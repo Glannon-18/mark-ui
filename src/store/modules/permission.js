@@ -10,21 +10,21 @@ const permission = {
     addRoutes: []
   },
   mutations: {
-    SET_ROUTERS: (state, routers) => {
-      state.addRoutes = routers
-      state.routes = constantRoutes.concat(routers)
+    SET_ROUTERS: (state, routes) => {
+      state.addRoutes = routes
+      state.routes = constantRoutes.concat(routes)
     }
   },
-  //356890
   actions: {
     getSidebar({commit}) {
-      new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         let asyncRoutes = []
         getUserMenu().then(data => {
           data2Routes(asyncRoutes, data.object)
           commit('SET_ROUTERS', asyncRoutes)
           router.addRoutes(asyncRoutes)
           router.options.routes = store.getters.routes
+          resolve(data)
         }).catch(error => {
           reject(error)
         })
