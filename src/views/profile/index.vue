@@ -42,6 +42,12 @@
     </el-row>
 
     <el-dialog title="修改头像" :visible.sync="dialogVisible">
+
+      <el-upload action="aa" name="file" accept=".jpeg,.png" :limit="1"
+                 :http-request="upload_img">
+        <el-button size="small" type="primary">选择图片</el-button>
+      </el-upload>
+
       <div style="width: 100%;height:300px">
         <vue-cropper autoCrop img="" ref="cropper" centerBox/>
       </div>
@@ -52,10 +58,12 @@
 </template>
 
 <script>
-  import { VueCropper } from 'vue-cropper'
+  import {VueCropper} from 'vue-cropper'
+  import {upload_img} from "@/api/profile"
+
   export default {
     name: "Profile",
-    components:{
+    components: {
       VueCropper
     },
     data() {
@@ -66,6 +74,12 @@
     methods: {
       showDialog() {
         this.dialogVisible = true
+      },
+      upload_img(param) {
+        let file = param.file
+        let form = new FormData()
+        form.append("file", file)
+        upload_img(form)
       }
     }
   }
