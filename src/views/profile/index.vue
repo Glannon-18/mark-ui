@@ -43,8 +43,12 @@
 
     <el-dialog title="修改头像" :visible.sync="dialogVisible">
 
-      <el-upload action="aa" name="file" accept=".jpeg,.png" :limit="1"
-                 :http-request="upload_img">
+      <el-upload action="aa" name="file"
+                 accept=".jpeg,.png"
+                 :limit="1"
+                 :show-file-list="false"
+                 :http-request="upload_img"
+      >
         <el-button size="small" type="primary">选择图片</el-button>
       </el-upload>
 
@@ -79,7 +83,9 @@
         let file = param.file
         let form = new FormData()
         form.append("file", file)
-        upload_img(form)
+        upload_img(form).then(response => {
+          console.log(response)
+        })
       }
     }
   }
