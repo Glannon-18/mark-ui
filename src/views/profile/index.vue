@@ -11,7 +11,7 @@
             <el-col :span="6">
               <!--              <a href="javascript:void(0)">-->
               <el-image fit="cover"
-                        src="https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif?imageView2/1/w/60/h/60"
+                        src="https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif?imageView2/1/w/100/h/100"
                         @click.native="showDialog"></el-image>
               <!--              </a>-->
             </el-col>
@@ -44,7 +44,7 @@
     <el-dialog title="修改头像" :visible.sync="dialogVisible">
 
       <el-upload action="aa" name="file"
-                 accept=".jpeg,.png"
+                 accept=".jpeg,.png,.jpg"
                  :limit="1"
                  :show-file-list="false"
                  :http-request="upload_img"
@@ -53,7 +53,7 @@
       </el-upload>
 
       <div style="width: 100%;height:300px">
-        <vue-cropper autoCrop img="" ref="cropper" centerBox/>
+        <vue-cropper autoCrop :img="img_url" ref="cropper" centerBox/>
       </div>
     </el-dialog>
 
@@ -72,7 +72,8 @@
     },
     data() {
       return {
-        dialogVisible: false
+        dialogVisible: false,
+        img_url: ""
       }
     },
     methods: {
@@ -84,7 +85,8 @@
         let form = new FormData()
         form.append("file", file)
         upload_img(form).then(response => {
-          console.log(response)
+          this.img_url="http://localhost:9528/dev-api/"+response.msg
+          console.log(this.img_url)
         })
       }
     }
