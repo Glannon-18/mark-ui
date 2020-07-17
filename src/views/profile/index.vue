@@ -9,30 +9,24 @@
 
           <el-row type="flex" justify="center">
             <el-col :span="6">
-              <!--              <a href="javascript:void(0)">-->
-              <el-image fit="cover"
-                        src="https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif?imageView2/1/w/100/h/100"
-                        @click.native="showDialog"></el-image>
-              <!--              </a>-->
+              <a href="javascript:void(0)">
+                <el-image fit="cover"
+                          :src="avatar"
+                          @click.native="showDialog"></el-image>
+              </a>
             </el-col>
 
           </el-row>
-          <el-row type="flex" justify="center">
+          <el-row type="flex" justify="center" style="margin-top: 15px">
             <el-col :span="6" style="text-align: center">
-              <span>账号</span>
+              <span>{{name}}</span>
             </el-col>
           </el-row>
-          <el-row type="flex" justify="center">
-            <el-col :span="6" style="text-align: center">
-              <span>名字</span>
-            </el-col>
-          </el-row>
-
 
           <el-divider content-position="left">角色</el-divider>
           <el-row>
             <el-col :span="6">
-              管理员
+              我的角色
             </el-col>
           </el-row>
 
@@ -43,7 +37,7 @@
 
     <el-dialog title="修改头像" :visible.sync="dialogVisible">
 
-      <el-upload action="aa" name="file"
+      <el-upload action="no" name="file" style="margin-bottom: 20px"
                  accept=".jpeg,.png,.jpg"
                  :limit="1"
                  :show-file-list="false"
@@ -53,8 +47,9 @@
       </el-upload>
 
       <div style="width: 100%;height:300px">
-        <vue-cropper autoCrop :img="img_url" ref="cropper" centerBox/>
+        <vue-cropper autoCrop :img="img_url" ref="cropper" centerBox fixed/>
       </div>
+      <el-button type="primary" @click="resetAvatar" style="margin-top: 20px">确定</el-button>
     </el-dialog>
 
   </div>
@@ -63,12 +58,18 @@
 
 <script>
   import {VueCropper} from 'vue-cropper'
-  import {upload_img} from "@/api/profile"
+  import {upload_img, setAvatar} from "@/api/profile"
+  import {mapGetters} from 'vuex'
+
 
   export default {
     name: "Profile",
     components: {
       VueCropper
+    },
+    computed: {
+      ...mapGetters(["avatar", "name"]),
+
     },
     data() {
       return {
@@ -85,8 +86,19 @@
         let form = new FormData()
         form.append("file", file)
         upload_img(form).then(response => {
-          this.img_url="http://localhost:9528/dev-api/"+response.msg
-          console.log(this.img_url)
+          this.img_url = "http://localhost:9528/dev-api/" + response.msg
+        })
+      },
+      resetAvatar() {
+        if (Math.floor(this.$refs.cropper.cropW) < 100) {
+          this.$message.warning("截图宽高不能小于100像素！")
+          return
+        }
+        this.$refs.cropper.getCropData(data => {
+          setAvatar({base64: data.replace("data:image/jpeg;base64,", "")}).then(data => {
+            this.$store.commit("user/SET_AVATAR", "http://localhost:9528/dev-api/" + data.object.name)
+            this.dialogVisible = false
+          })
         })
       }
     }
