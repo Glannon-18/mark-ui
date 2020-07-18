@@ -26,7 +26,7 @@
           <el-divider content-position="left">角色</el-divider>
           <el-row>
             <el-col :span="6">
-              我的角色
+              {{roles}}
             </el-col>
           </el-row>
 
@@ -69,7 +69,13 @@
     },
     computed: {
       ...mapGetters(["avatar", "name"]),
-
+      roles() {
+        let roles = ""
+        this.$store.getters.roles.forEach(r => {
+          roles += r + " "
+        })
+        return roles
+      }
     },
     data() {
       return {

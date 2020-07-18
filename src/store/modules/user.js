@@ -6,7 +6,8 @@ const getDefaultState = () => {
   return {
     token: getToken(),
     name: '',
-    avatar: ''
+    avatar: '',
+    roles: []
   }
 }
 
@@ -24,6 +25,9 @@ const mutations = {
   },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
+  },
+  SET_ROLES: (state, roles) => {
+    state.roles = roles
   }
 }
 
@@ -53,10 +57,15 @@ const actions = {
           reject('Verification failed, please Login again.')
         }
 
-        const {username, photo} = object
+        const {username, photo, roleList} = object
 
         commit('SET_NAME', username)
         commit('SET_AVATAR', "http://localhost:9528/dev-api/" + photo)
+        let roles = []
+        roleList.forEach(r => {
+          roles.push(r.nameZh)
+        })
+        commit("SET_ROLES", roles)
         resolve(object)
       }).catch(error => {
         reject(error)
