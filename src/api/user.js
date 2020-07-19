@@ -44,3 +44,27 @@ export function add(data) {
     data
   })
 }
+
+export function update(id, data) {
+  return request({
+    url: "/user/" + id,
+    method: "put",
+    data
+  })
+
+}
+
+export function page(params) {
+  return request({
+    url: "/user/",
+    method: "get",
+    params
+  })
+}
+
+export function getByUserId(userId) {
+  return request({
+    url: "/user/" + userId,
+    method: "get",
+  })
+}

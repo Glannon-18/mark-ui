@@ -1,22 +1,22 @@
 <template>
   <div class="app-container">
     <el-row type="flex" justify="space-between">
-      <el-col :span="8">
+      <div>
         <el-form :inline="true">
           <el-form-item>
             <el-input v-model="search" placeholder="请输入账户名或者用户名"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary">查询</el-button>
+            <el-button type="primary" @click="find">查询</el-button>
           </el-form-item>
         </el-form>
-      </el-col>
-      <el-col :span="3">
-        <el-button type="primary" @click="dialogVisible=true">新建用户</el-button>
-      </el-col>
+      </div>
+      <div>
+        <el-button type="primary" @click="add">新建用户</el-button>
+      </div>
     </el-row>
     <el-row type="flex" justify="start">
-      <el-col :span="20">
+      <el-col :span="24">
         <el-table :data="userData" border>
           <el-table-column prop="account" label="账号">
           </el-table-column>
@@ -34,11 +34,14 @@
         <el-pagination style="margin-top: 20px"
                        background
                        layout="prev, pager, next"
-                       :total="1000">
+                       :page-size="pageSize"
+                       :current-page.sync="currentPage"
+                       @current-change="toPage"
+                       :total="total">
         </el-pagination>
       </el-col>
     </el-row>
-    <el-dialog title="用户信息" :visible.sync="dialogVisible" width="30%" @open="info">
+    <el-dialog title="用户信息" :visible.sync="dialogVisible" width="30%" @open="info" @close="resetForm">
       <el-row type="flex" justify="center">
         <el-col :span="18">
           <el-form label-width="80px" :rules="rules" ref="form" :model="showUser">
@@ -83,13 +86,20 @@
 
 <script>
   import {getAllRole} from "@/api/role";
-  import {checkAccount, add} from "@/api/user";
+  import {checkAccount, add, page, getByUserId, update} from "@/api/user";
 
   export default {
     name: 'SystemUser',
+    created() {
+      this.page(1, "")
+    },
     data() {
       return {
         search: "",
+        currentPage: 1,
+        total: 0,
+        pageSize: 0,
+
         dialogVisible: false,
         rules: {
           account: [{required: true, message: '请输入账户名', trigger: 'blur'}
@@ -107,7 +117,28 @@
           ],
           username: [{required: true, message: '请输用户名', trigger: 'blur'}],
           phone: [{required: true, message: '请输入联系电话', trigger: 'blur'}],
-          password: [{required: true, message: '请输入密码', trigger: 'blur'}]
+          password: [{
+            validator: (rule, value, callback) => {
+              if (this.showUser.userId == '') {
+                if (/[a-zA-Z1-9]{6,10}/.test(value) == false) {
+                  callback(new Error("密码必须是6至10位字符或者数字"));
+                } else {
+                  callback()
+                }
+              } else {
+                if (value.trim() != '') {
+                  if (/[a-zA-Z1-9]{6,10}/.test(value) == false) {
+                    callback(new Error("密码必须是6至10位字符或者数字"));
+                  } else {
+                    callback()
+                  }
+                } else {
+                  callback()
+                }
+              }
+            }, trigger: 'blur'
+
+          }]
         },
         showUser: {
           userId: "",
@@ -118,38 +149,23 @@
           available: true,
           rolesList: []
         },
-        userData: [
-          {
-            id: 1,
-            account: "aaaa",
-            username: "eeee",
-            role: "管理员"
-          }, {
-            id: 2,
-            account: "aaaa",
-            username: "eeee",
-            role: "管理员"
-          }, {
-            id: 3,
-            account: "aaaa",
-            username: "eeee",
-            role: "管理员"
-          }
-        ],
+        userData: [],
         rolesList: []
       }
     },
     methods: {
+      add() {
+        this.showUser.userId = ""
+        this.dialogVisible = true
+      },
       edit(user) {
-        console.log(user)
+        this.showUser.userId = user.id
+        this.dialogVisible = true
+      },
+      resetForm() {
+        this.$refs.form.resetFields()
       },
       info() {
-        if (this.showUser.userId == "") {
-          this.loadUserInfo(this.showUser.userId)
-        }
-
-      },
-      loadUserInfo(userId) {
         getAllRole().then(data => {
           let roleList = []
           data.object.forEach(r => {
@@ -157,13 +173,75 @@
           })
           this.rolesList = roleList
         })
+        if (this.showUser.userId != "") {
+          this.loadUserInfo(this.showUser.userId)
+        }
+
+      },
+      loadUserInfo(userId) {
+        getByUserId(userId).then(data => {
+          let user = data.object
+          this.showUser.userId = user.id
+          this.showUser.account = user.account
+          this.showUser.username = user.username
+          this.showUser.password = ''
+          this.showUser.phone = user.telephone
+          this.showUser.available = user.usable
+          let roleList = []
+          user.roleList.forEach(r => {
+            roleList.push(r.id)
+          })
+
+          this.showUser.rolesList = roleList
+        })
       },
       submit() {
         this.$refs.form.validate(valid => {
           if (valid) {
-            add(this.showUser)
+            if (this.showUser.userId == "") {
+              add(this.showUser).then((data) => {
+                this.$message.success(data.msg)
+                this.dialogVisible = false
+                this.page(1, "")
+              })
+            } else {
+              update(this.showUser.userId, this.showUser).then(data => {
+                this.$message.success(data.msg)
+                this.dialogVisible = false
+                this.page(1, "")
+              })
+            }
           }
         })
+      },
+      page(currentPage, search) {
+        page({name: search, currentPage: currentPage}).then(data => {
+          let tableData = []
+          data.data.forEach(u => {
+            let roles = ""
+            u.roleList.forEach(r => {
+              roles += r.nameZh + " "
+            })
+            tableData.push({
+              id: u.id,
+              account: u.account,
+              username: u.username,
+              role: roles
+            })
+          })
+          this.userData = tableData
+
+          this.currentPage = currentPage
+          this.search = search
+          this.total = data.total
+          this.pageSize = data.pageSize
+        })
+      },
+      toPage(currentPage) {
+        this.page(currentPage, this.search)
+      },
+      find() {
+        this.page(1, this.search)
       }
 
     }
