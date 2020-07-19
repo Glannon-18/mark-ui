@@ -38,20 +38,20 @@
         </el-pagination>
       </el-col>
     </el-row>
-    <el-dialog title="用户信息" :visible.sync="dialogVisible" width="30%">
+    <el-dialog title="用户信息" :visible.sync="dialogVisible" width="30%" @open="info">
       <el-row type="flex" justify="center">
         <el-col :span="18">
-          <el-form label-width="80px">
-            <el-form-item label="账户名">
+          <el-form label-width="80px" :rules="rules" ref="form" :model="showUser">
+            <el-form-item label="账户名" prop="account">
               <el-input v-model="showUser.account"></el-input>
             </el-form-item>
-            <el-form-item label="用户名">
+            <el-form-item label="用户名" prop="username">
               <el-input v-model="showUser.username"></el-input>
             </el-form-item>
-            <el-form-item label="密码">
-              <el-input v-model="showUser.password"></el-input>
+            <el-form-item label="密码" prop="password">
+              <el-input v-model="showUser.password" type="password"></el-input>
             </el-form-item>
-            <el-form-item label="联系电话">
+            <el-form-item label="联系电话" prop="phone">
               <el-input v-model="showUser.phone"></el-input>
             </el-form-item>
             <el-form-item label="是否可用">
@@ -72,7 +72,7 @@
       </el-row>
 
       <div slot="footer">
-        <el-button type="primary">确 定</el-button>
+        <el-button type="primary" @click="submit">确 定</el-button>
       </div>
 
     </el-dialog>
@@ -82,16 +82,38 @@
 </template>
 
 <script>
+  import {getAllRole} from "@/api/role";
+  import {checkAccount, add} from "@/api/user";
+
   export default {
     name: 'SystemUser',
     data() {
       return {
         search: "",
         dialogVisible: false,
+        rules: {
+          account: [{required: true, message: '请输入账户名', trigger: 'blur'}
+            , {
+              validator: (rule, value, callback) => {
+                checkAccount({account: value, userId: this.showUser.userId}).then(data => {
+                  if (data.object == 0) {
+                    callback()
+                  } else {
+                    callback(new Error("该账户名已经存在"))
+                  }
+                })
+              }, trigger: 'blur'
+            }
+          ],
+          username: [{required: true, message: '请输用户名', trigger: 'blur'}],
+          phone: [{required: true, message: '请输入联系电话', trigger: 'blur'}],
+          password: [{required: true, message: '请输入密码', trigger: 'blur'}]
+        },
         showUser: {
+          userId: "",
           account: "",
           username: "",
-          password:"",
+          password: "",
           phone: "",
           available: true,
           rolesList: []
@@ -114,26 +136,36 @@
             role: "管理员"
           }
         ],
-        rolesList: [
-          {
-            id: 1,
-            name: "dsd"
-          },
-          {
-            id: 2,
-            name: "rr"
-          },
-          {
-            id: 3,
-            name: "tt"
-          },
-        ]
+        rolesList: []
       }
     },
     methods: {
       edit(user) {
         console.log(user)
+      },
+      info() {
+        if (this.showUser.userId == "") {
+          this.loadUserInfo(this.showUser.userId)
+        }
+
+      },
+      loadUserInfo(userId) {
+        getAllRole().then(data => {
+          let roleList = []
+          data.object.forEach(r => {
+            roleList.push({id: r.id, name: r.nameZh})
+          })
+          this.rolesList = roleList
+        })
+      },
+      submit() {
+        this.$refs.form.validate(valid => {
+          if (valid) {
+            add(this.showUser)
+          }
+        })
       }
+
     }
   }
 </script>

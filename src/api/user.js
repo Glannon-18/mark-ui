@@ -28,3 +28,19 @@ export function getUserMenu() {
     method: 'get'
   })
 }
+
+export function checkAccount(params) {
+  return request({
+    url: "/user/check",
+    method: "get",
+    params
+  })
+}
+
+export function add(data) {
+  return request({
+    url: "/user/",
+    method: "post",
+    data
+  })
+}
