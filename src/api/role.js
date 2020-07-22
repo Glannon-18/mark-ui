@@ -4,6 +4,13 @@ export function getAllRole() {
   return request({
     url: '/role/selectAll',
     method: 'get',
-    data:{a:1}
+  })
+}
+
+export function page(params) {
+  return request({
+    url: "/role/",
+    method: "get",
+    params
   })
 }
