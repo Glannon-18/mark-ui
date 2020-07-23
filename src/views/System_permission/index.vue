@@ -40,7 +40,7 @@
       </el-col>
     </el-row>
 
-    <el-dialog title="角色信息" :visible.sync="dialogVisible" width="30%">
+    <el-dialog title="角色信息" :visible.sync="dialogVisible" width="30%" @open="loadInfo">
 
       <el-row type="flex" justify="center">
         <el-col :span="18">
@@ -51,6 +51,10 @@
 
             <el-form-item label="角色中文名" prop="nameZh">
               <el-input v-model="showRole.nameZh"></el-input>
+            </el-form-item>
+
+            <el-form-item label="角色权限">
+              <el-tree :data="treeData" ref="tree" show-checkbox node-key="id" :props="pro"></el-tree>
             </el-form-item>
           </el-form>
 
@@ -68,7 +72,7 @@
 </template>
 
 <script>
-  import {page} from "@/api/role";
+  import {page, getMenuTree,add} from "@/api/role";
 
   export default {
     name: 'SystemPermission',
@@ -85,13 +89,38 @@
         dialogVisible: false,
         tableData: [],
         rules: {
-          name: [{required: true, message: '请输入角色英文名', trigger: 'blur'}],
-          nameZh: [{required: true, message: '请输入角色名', trigger: 'blur'}],
+          name: [{required: true, message: '请输入角色英文名', trigger: 'blur'}
+          ,
+            {
+              validator: (rule, value, callback) => {
+                if(/^[a-zA-Z1-9]{3,6}$/.test(value)==false){
+                  callback(new Error("只能输入3-6位英文或者数字"))
+                }else {
+                  callback()
+                }
+              }, trigger: 'blur'
+            }
+          ],
+          nameZh: [{required: true, message: '请输入角色名', trigger: 'blur'},
+            {
+              validator: (rule, value, callback) => {
+                if(/^[\u4e00-\u9fa5]{3,6}$/.test(value)==false){
+                  callback(new Error("只能输入3-6位汉字"))
+                }else {
+                  callback()
+                }
+              }, trigger: 'blur'
+            }],
         },
         showRole: {
           id: "",
           name: "",
           nameZh: ""
+        },
+        treeData: [],
+        pro: {
+          label: "title",
+          children: "children"
         }
       }
     },
@@ -121,11 +150,38 @@
         this.toPage(pageNum, this.search)
       }
       ,
-      open(){
-        this.dialogVisible=true
+      open() {
+        this.dialogVisible = true
       },
-      submit(){
-          this.dialogVisible=false
+      submit() {
+        let list=this.$refs.tree.getCheckedKeys(true)
+        add({
+          name: this.showRole.name,
+          nameZh:this.showRole.nameZh,
+          menus:list
+        }).then(data=>{
+          this.$message.success(data.msg)
+          this.toPage(1,"")
+          this.dialogVisible = false
+        })
+      },
+      loadInfo() {
+        getMenuTree().then(data => {
+          this.treeData= this.menu2tree(data.object)
+        })
+      },
+      menu2tree(data) {
+        let list = []
+        data.forEach(d => {
+          let o = {}
+          o.id = d.id
+          o.title = d.title
+          if (d.children) {
+            o.children = this.menu2tree(d.children)
+          }
+          list.push(o)
+        })
+        return list
       }
     }
   }
