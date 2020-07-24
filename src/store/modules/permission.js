@@ -21,10 +21,11 @@ const permission = {
         let asyncRoutes = []
         getUserMenu().then(data => {
           data2Routes(asyncRoutes, data.object)
+          asyncRoutes.push( { path: '*', redirect: '/404', hidden: true })
           commit('SET_ROUTERS', asyncRoutes)
           router.addRoutes(asyncRoutes)
           router.options.routes = store.getters.routes
-          resolve(data)
+          resolve(asyncRoutes)
         }).catch(error => {
           reject(error)
         })

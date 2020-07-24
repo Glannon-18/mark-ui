@@ -14,6 +14,7 @@ router.beforeEach(async (to, from, next) => {
 
   // start progress bar
   NProgress.start()
+  console.log(to)
 
   // set page title
   document.title = getPageTitle(to.meta.title)
@@ -36,8 +37,7 @@ router.beforeEach(async (to, from, next) => {
           await store.dispatch('user/getInfo')
 
           await store.dispatch('permission/getSidebar')
-
-          next()
+          next({ ...to, replace: true })
         } catch (error) {
           // remove token and go to login page to re-login
           await store.dispatch('user/resetToken')
