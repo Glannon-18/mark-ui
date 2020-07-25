@@ -24,7 +24,18 @@
           <el-table-column label="操作" width="170">
             <template slot-scope="scope">
               <el-button @click="edit(scope.row)" type="primary" size="small">编辑</el-button>
-              <el-button @click="delete(scope.row)" type="danger" size="small">删除</el-button>
+
+              <el-popconfirm
+                confirmButtonText='删除'
+                cancelButtonText='取消'
+                icon="el-icon-info"
+                iconColor="red"
+                title="你确定删除这个角色？"
+                @onConfirm="deleteRole(scope.row)">
+                <el-button slot="reference" type="danger" size="small">删除</el-button>
+              </el-popconfirm>
+
+
             </template>
           </el-table-column>
         </el-table>
@@ -40,7 +51,7 @@
       </el-col>
     </el-row>
 
-    <el-dialog title="角色信息" :visible.sync="dialogVisible" width="30%" @open="loadInfo">
+    <el-dialog title="角色信息" :visible.sync="dialogVisible" width="30%" @open="loadInfo" @close="reset">
 
       <el-row type="flex" justify="center">
         <el-col :span="18">
@@ -54,7 +65,8 @@
             </el-form-item>
 
             <el-form-item label="角色权限">
-              <el-tree :data="treeData" ref="tree" show-checkbox node-key="id" :props="pro"></el-tree>
+              <el-tree :data="treeData" ref="tree" show-checkbox node-key="id" :props="pro"
+                       :default-checked-keys="showRole.mid"></el-tree>
             </el-form-item>
           </el-form>
 
@@ -72,7 +84,7 @@
 </template>
 
 <script>
-  import {page, getMenuTree,add} from "@/api/role";
+  import {page, getMenuTree, add, getRoleWithMenu, deleteRole} from "@/api/role";
 
   export default {
     name: 'SystemPermission',
@@ -90,12 +102,12 @@
         tableData: [],
         rules: {
           name: [{required: true, message: '请输入角色英文名', trigger: 'blur'}
-          ,
+            ,
             {
               validator: (rule, value, callback) => {
-                if(/^[a-zA-Z1-9]{3,6}$/.test(value)==false){
+                if (/^[a-zA-Z1-9]{3,6}$/.test(value) == false) {
                   callback(new Error("只能输入3-6位英文或者数字"))
-                }else {
+                } else {
                   callback()
                 }
               }, trigger: 'blur'
@@ -104,9 +116,9 @@
           nameZh: [{required: true, message: '请输入角色名', trigger: 'blur'},
             {
               validator: (rule, value, callback) => {
-                if(/^[\u4e00-\u9fa5]{3,6}$/.test(value)==false){
+                if (/^[\u4e00-\u9fa5]{3,6}$/.test(value) == false) {
                   callback(new Error("只能输入3-6位汉字"))
-                }else {
+                } else {
                   callback()
                 }
               }, trigger: 'blur'
@@ -115,7 +127,8 @@
         showRole: {
           id: "",
           name: "",
-          nameZh: ""
+          nameZh: "",
+          mid: []
         },
         treeData: [],
         pro: {
@@ -125,16 +138,22 @@
       }
     },
     methods: {
+      reset() {
+        this.$refs.form.resetFields()
+        this.$refs.tree.setCheckedKeys([])
+      },
       find() {
         this.toPage(1, this.search)
       },
-      add() {
-
-      },
       edit(role) {
-
+        this.showRole.id = role.id
+        this.dialogVisible = true
       },
-      delete(role) {
+      deleteRole(role) {
+        deleteRole(role.id).then(data => {
+          this.$message.success(data.msg)
+          this.toPage(1, "")
+        })
 
       },
       toPage(pageNum, search) {
@@ -151,24 +170,40 @@
       }
       ,
       open() {
+        this.showRole.id = ""
         this.dialogVisible = true
       },
       submit() {
-        let list=this.$refs.tree.getCheckedKeys(true)
+        let list = this.$refs.tree.getCheckedKeys(true)
         add({
+          id: this.showRole.id,
           name: this.showRole.name,
-          nameZh:this.showRole.nameZh,
-          menus:list
-        }).then(data=>{
+          nameZh: this.showRole.nameZh,
+          menus: list
+        }).then(data => {
           this.$message.success(data.msg)
-          this.toPage(1,"")
+          this.toPage(1, "")
           this.dialogVisible = false
         })
       },
       loadInfo() {
         getMenuTree().then(data => {
-          this.treeData= this.menu2tree(data.object)
+          this.treeData = this.menu2tree(data.object)
         })
+        if (this.showRole.id != "") {
+          getRoleWithMenu(this.showRole.id).then(data => {
+            let {object} = data
+            this.showRole.name = object.name
+            this.showRole.nameZh = object.nameZh
+            let {menuList} = object
+            let ms = []
+            menuList.forEach(m => {
+              ms.push(m.id)
+            })
+            this.showRole.mid = ms
+          })
+        }
+
       },
       menu2tree(data) {
         let list = []
