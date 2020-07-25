@@ -2,14 +2,14 @@ import request from '@/utils/request'
 
 export function getAllRole() {
   return request({
-    url: '/role/selectAll',
+    url: '/system/role/selectAll',
     method: 'get',
   })
 }
 
 export function page(params) {
   return request({
-    url: "/role/",
+    url: "/system/role/",
     method: "get",
     params
   })
@@ -17,15 +17,31 @@ export function page(params) {
 
 export function getMenuTree() {
   return request({
-    url: "/role/getMenuTree",
+    url: "/system/role/getMenuTree",
     method: "get"
   })
 }
 
 export function add(data) {
   return request({
-    url:"/role/",
-    method:"post",
+    url: "/system/role/",
+    method: "post",
     data
   })
+}
+
+export function getRoleWithMenu(id) {
+  return request({
+    url: "/system/role/" + id,
+    method: "get"
+  })
+
+}
+
+export function deleteRole(id) {
+  return request({
+    url: "/system/role/" + id,
+    method: "delete"
+  })
+
 }

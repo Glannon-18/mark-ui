@@ -15,3 +15,19 @@ export function setAvatar(data) {
     data
   })
 }
+
+export function getInfo() {
+  return request({
+    url: '/profile/info',
+    method: 'get',
+  })
+}
+
+
+
+export function getUserMenu() {
+  return request({
+    url: '/profile/menu',
+    method: 'get'
+  })
+}

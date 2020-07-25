@@ -1,5 +1,5 @@
 import {constantRoutes} from '@/router'
-import {getUserMenu} from '@/api/user'
+import {getUserMenu} from "@/api/profile";
 import router from '@/router'
 import Layout from '@/layout'
 import store from "@/store";
@@ -21,7 +21,7 @@ const permission = {
         let asyncRoutes = []
         getUserMenu().then(data => {
           data2Routes(asyncRoutes, data.object)
-          asyncRoutes.push( { path: '*', redirect: '/404', hidden: true })
+          asyncRoutes.push({path: '*', redirect: '/404', hidden: true})
           commit('SET_ROUTERS', asyncRoutes)
           router.addRoutes(asyncRoutes)
           router.options.routes = store.getters.routes

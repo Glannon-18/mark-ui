@@ -14,7 +14,6 @@ router.beforeEach(async (to, from, next) => {
 
   // start progress bar
   NProgress.start()
-  console.log(to)
 
   // set page title
   document.title = getPageTitle(to.meta.title)
