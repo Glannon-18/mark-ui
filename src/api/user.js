@@ -55,3 +55,10 @@ export function getByUserId(userId) {
     method: "get",
   })
 }
+
+export function getAllRole() {
+  return request({
+    url: '/system/user/selectAllRole',
+    method: 'get',
+  })
+}

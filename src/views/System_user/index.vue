@@ -17,7 +17,7 @@
     </el-row>
     <el-row type="flex" justify="start">
       <el-col :span="24">
-        <el-table :data="userData" border>
+        <el-table :data="userData" border v-loading="tableLoading">
           <el-table-column prop="account" label="账号">
           </el-table-column>
           <el-table-column prop="username" label="用户名">
@@ -41,7 +41,7 @@
         </el-pagination>
       </el-col>
     </el-row>
-    <el-dialog title="用户信息" :visible.sync="dialogVisible" width="30%" @open="info" @close="resetForm">
+    <el-dialog title="用户信息" :visible.sync="dialogVisible" width="30%" @close="resetForm">
       <el-row type="flex" justify="center">
         <el-col :span="18">
           <el-form label-width="80px" :rules="rules" ref="form" :model="showUser">
@@ -85,8 +85,8 @@
 </template>
 
 <script>
-  import {getAllRole} from "@/api/role";
-  import {checkAccount, add, page, getByUserId, update} from "@/api/user";
+  import {checkAccount, add, page, getByUserId, update, getAllRole} from "@/api/user";
+  import axios from 'axios'
 
   export default {
     name: 'SystemUser',
@@ -101,6 +101,7 @@
         pageSize: 0,
 
         dialogVisible: false,
+        tableLoading: false,
         rules: {
           account: [{required: true, message: '请输入账户名', trigger: 'blur'}
             , {
@@ -156,44 +157,46 @@
     methods: {
       add() {
         this.showUser.userId = ""
-        this.dialogVisible = true
-      },
-      edit(user) {
-        this.showUser.userId = user.id
-        this.dialogVisible = true
-      },
-      resetForm() {
-        this.$refs.form.resetFields()
-      },
-      info() {
         getAllRole().then(data => {
           let roleList = []
           data.object.forEach(r => {
             roleList.push({id: r.id, name: r.nameZh})
           })
           this.rolesList = roleList
+          this.dialogVisible = true
         })
-        if (this.showUser.userId != "") {
-          this.loadUserInfo(this.showUser.userId)
-        }
 
       },
-      loadUserInfo(userId) {
-        getByUserId(userId).then(data => {
-          let user = data.object
+      edit(user) {
+        this.showUser.userId = user.id
+        axios.all([getAllRole(), getByUserId(this.showUser.userId)]).then(axios.spread((v1, v2) => {
+          let roleList = []
+          v1.object.forEach(r => {
+            roleList.push({id: r.id, name: r.nameZh})
+          })
+          this.rolesList = roleList
+          this.dialogVisible = true
+
+          let user = v2.object
           this.showUser.userId = user.id
           this.showUser.account = user.account
           this.showUser.username = user.username
           this.showUser.password = ''
           this.showUser.phone = user.telephone
           this.showUser.available = user.usable
-          let roleList = []
+          let userRoleList = []
           user.roleList.forEach(r => {
-            roleList.push(r.id)
+            userRoleList.push(r.id)
           })
+          this.showUser.rolesList = userRoleList
 
-          this.showUser.rolesList = roleList
-        })
+          this.dialogVisible = true
+        }))
+
+      },
+      resetForm() {
+        this.$refs.form.resetFields()
+        this.showUser.rolesList = []
       },
       submit() {
         this.$refs.form.validate(valid => {
@@ -215,6 +218,7 @@
         })
       },
       page(currentPage, search) {
+        this.tableLoading = true
         page({name: search, currentPage: currentPage}).then(data => {
           let tableData = []
           data.data.forEach(u => {
@@ -230,11 +234,11 @@
             })
           })
           this.userData = tableData
-
           this.currentPage = currentPage
           this.search = search
           this.total = data.total
           this.pageSize = data.pageSize
+          this.tableLoading = false
         })
       },
       toPage(currentPage) {

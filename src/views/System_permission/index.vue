@@ -18,7 +18,7 @@
 
     <el-row>
       <el-col :span="24">
-        <el-table :data="tableData" border>
+        <el-table :data="tableData" border v-loading="tableLoading">
           <el-table-column prop="name" label="角色名称"></el-table-column>
           <el-table-column prop="nameZh" label="角色中文名称"></el-table-column>
           <el-table-column label="操作" width="170">
@@ -51,7 +51,7 @@
       </el-col>
     </el-row>
 
-    <el-dialog title="角色信息" :visible.sync="dialogVisible" width="30%" @open="loadInfo" @close="reset">
+    <el-dialog title="角色信息" :visible.sync="dialogVisible" width="30%" @close="reset">
 
       <el-row type="flex" justify="center">
         <el-col :span="18">
@@ -85,6 +85,7 @@
 
 <script>
   import {page, getMenuTree, add, getRoleWithMenu, deleteRole} from "@/api/role";
+  import axios from 'axios'
 
   export default {
     name: 'SystemPermission',
@@ -100,6 +101,7 @@
 
         dialogVisible: false,
         tableData: [],
+        tableLoading: false,
         rules: {
           name: [{required: true, message: '请输入角色英文名', trigger: 'blur'}
             ,
@@ -147,7 +149,22 @@
       },
       edit(role) {
         this.showRole.id = role.id
-        this.dialogVisible = true
+        axios.all([getMenuTree(), getRoleWithMenu(this.showRole.id)]).then(axios.spread((v1, v2) => {
+          this.treeData = this.menu2tree(v1.object)
+
+          let {object} = v2
+          this.showRole.name = object.name
+          this.showRole.nameZh = object.nameZh
+          let {menuList} = object
+          let ms = []
+          menuList.forEach(m => {
+            ms.push(m.id)
+          })
+          this.showRole.mid = ms
+          this.dialogVisible = true
+        }))
+
+
       },
       deleteRole(role) {
         deleteRole(role.id).then(data => {
@@ -157,12 +174,14 @@
 
       },
       toPage(pageNum, search) {
+        this.tableLoading = true
         page({currentPage: pageNum, name: search}).then(data => {
           this.tableData = data.data
           this.currentPage = pageNum
           this.pageSize = data.pageSize
           this.total = data.total
           this.search = search
+          this.tableLoading = false
         })
       },
       numPage(pageNum) {
@@ -171,7 +190,10 @@
       ,
       open() {
         this.showRole.id = ""
-        this.dialogVisible = true
+        getMenuTree().then(data => {
+          this.treeData = this.menu2tree(data.object)
+          this.dialogVisible = true
+        })
       },
       submit() {
         let list = this.$refs.tree.getCheckedKeys(true)
@@ -185,25 +207,6 @@
           this.toPage(1, "")
           this.dialogVisible = false
         })
-      },
-      loadInfo() {
-        getMenuTree().then(data => {
-          this.treeData = this.menu2tree(data.object)
-        })
-        if (this.showRole.id != "") {
-          getRoleWithMenu(this.showRole.id).then(data => {
-            let {object} = data
-            this.showRole.name = object.name
-            this.showRole.nameZh = object.nameZh
-            let {menuList} = object
-            let ms = []
-            menuList.forEach(m => {
-              ms.push(m.id)
-            })
-            this.showRole.mid = ms
-          })
-        }
-
       },
       menu2tree(data) {
         let list = []
