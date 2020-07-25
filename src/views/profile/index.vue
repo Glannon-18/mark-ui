@@ -19,13 +19,19 @@
           </el-row>
           <el-row type="flex" justify="center" style="margin-top: 15px">
             <el-col :span="6" style="text-align: center">
-              <span>{{name}}</span>
+              <template v-if="edit">
+                <el-input size="mini" v-model="inputName" ref="input" @blur="submit"></el-input>
+              </template>
+              <template v-else>
+                <span>{{name}}</span>&nbsp;&nbsp;<i class="el-icon-edit" @click="editName"></i>
+              </template>
+
             </el-col>
           </el-row>
 
           <el-divider content-position="left">角色</el-divider>
           <el-row>
-            <el-col :span="6">
+            <el-col :span="24">
               {{roles}}
             </el-col>
           </el-row>
@@ -80,10 +86,29 @@
     data() {
       return {
         dialogVisible: false,
-        img_url: ""
+        img_url: "",
+        edit: false,
+        inputName: ""
       }
     },
     methods: {
+      submit() {
+        if (this.inputName.length == 0 || this.inputName == this.name) {
+          this.edit = false
+          return
+        }
+        this.$store.dispatch("user/updateUsername", {username: this.inputName}).then(data => {
+          this.$message.success(data)
+          this.edit = false
+        })
+      },
+      editName() {
+        this.inputName = this.name
+        this.edit = true
+        this.$nextTick(() => {
+          this.$refs.input.focus()
+        })
+      },
       showDialog() {
         this.dialogVisible = true
       },

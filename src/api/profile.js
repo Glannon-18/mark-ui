@@ -24,10 +24,18 @@ export function getInfo() {
 }
 
 
-
 export function getUserMenu() {
   return request({
     url: '/profile/menu',
     method: 'get'
+  })
+}
+
+
+export function updateUsername(params) {
+  return request({
+    url: "/profile/setUsername",
+    method: "put",
+    params
   })
 }

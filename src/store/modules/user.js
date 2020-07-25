@@ -1,4 +1,5 @@
 import {login, logout} from '@/api/user'
+import {updateUsername} from "@/api/profile";
 import {getInfo} from "@/api/profile";
 import {getToken, setToken, removeToken} from '@/utils/auth'
 import {resetRouter} from '@/router'
@@ -94,6 +95,15 @@ const actions = {
       removeToken() // must remove  token  first
       commit('RESET_STATE')
       resolve()
+    })
+  },
+
+  updateUsername({commit}, data) {
+    return new Promise(resolve => {
+      updateUsername(data).then(data => {
+        commit("SET_NAME", data.object.updateName)
+        resolve(data.msg)
+      })
     })
   }
 }
