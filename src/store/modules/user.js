@@ -1,5 +1,5 @@
 import {login, logout} from '@/api/user'
-import {updateUsername} from "@/api/profile";
+import {setAvatar, updateUsername} from "@/api/profile";
 import {getInfo} from "@/api/profile";
 import {getToken, setToken, removeToken} from '@/utils/auth'
 import {resetRouter} from '@/router'
@@ -103,6 +103,14 @@ const actions = {
       updateUsername(data).then(data => {
         commit("SET_NAME", data.object.updateName)
         resolve(data.msg)
+      })
+    })
+  },
+  updateAvatar({commit}, data) {
+    return new Promise(resolve => {
+      setAvatar({base64: data.replace("data:image/jpeg;base64,", "")}).then(data => {
+        commit("SET_AVATAR", "http://localhost:9528/dev-api/" + data.object.name)
+        resolve()
       })
     })
   }
