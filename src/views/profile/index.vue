@@ -41,9 +41,9 @@
       </el-col>
     </el-row>
 
-    <el-dialog title="修改头像" :visible.sync="dialogVisible">
+    <el-dialog title="修改头像" :visible.sync="dialogVisible" @close="reset">
 
-      <el-upload action="no" name="file" style="margin-bottom: 20px"
+      <el-upload action="no" name="file" style="margin-bottom: 20px" ref="upload"
                  accept=".jpeg,.png,.jpg"
                  :limit="1"
                  :show-file-list="false"
@@ -92,6 +92,12 @@
       }
     },
     methods: {
+      reset() {
+        // this.$refs.cropper.clearCrop()
+        this.img_url = ""
+        this.$refs.upload.clearFiles()
+      },
+
       submit() {
         if (this.inputName.length == 0 || this.inputName == this.name) {
           this.edit = false
@@ -126,8 +132,7 @@
           return
         }
         this.$refs.cropper.getCropData(data => {
-          setAvatar({base64: data.replace("data:image/jpeg;base64,", "")}).then(data => {
-            this.$store.commit("user/SET_AVATAR", "http://localhost:9528/dev-api/" + data.object.name)
+          this.$store.dispatch("user/updateAvatar", data).then(() => {
             this.dialogVisible = false
           })
         })
