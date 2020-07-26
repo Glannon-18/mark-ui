@@ -54,6 +54,11 @@
             <el-form-item label="密码" prop="password">
               <el-input v-model="showUser.password" type="password"></el-input>
             </el-form-item>
+            <el-alert v-show="showUser.userId!=''"
+                      title="编辑用户时，不输入密码则不修改密码，输入密码则将密码修改为输入的值"
+                      type="warning"
+                      :closable="true" show-icon style="margin-bottom:22px">
+            </el-alert>
             <el-form-item label="联系电话" prop="phone">
               <el-input v-model="showUser.phone"></el-input>
             </el-form-item>
