@@ -1,5 +1,5 @@
 <template>
-  <div>标注管理</div>
+  <div class="app-container">标注管理</div>
 </template>
 
 <script>

@@ -1,5 +1,5 @@
 <template>
-  <div>发布项目</div>
+  <div class="app-container">发布项目</div>
 </template>
 
 <script>

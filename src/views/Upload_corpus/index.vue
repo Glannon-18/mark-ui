@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="app-container">
       上传语料
     </div>
 </template>

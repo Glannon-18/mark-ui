@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="app-container">
     最终审查
   </div>
 

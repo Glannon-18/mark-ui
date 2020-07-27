@@ -1,5 +1,5 @@
 <template>
-  <div>小组管理</div>
+  <div class="app-container">小组管理</div>
 </template>
 
 <script>

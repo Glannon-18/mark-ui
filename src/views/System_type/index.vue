@@ -1,5 +1,5 @@
 <template>
-  <div>类型管理</div>
+  <div class="app-container">类型管理</div>
 </template>
 
 <script>
